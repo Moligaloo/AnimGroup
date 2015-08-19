@@ -4,7 +4,7 @@ You can make animation groups, including sequetial and parallel animation groups
 and insert pause for specified seconds and function call inside animation group, or loop animation for specific times.
 
 # Usage
-Just drop anim_group.lua to your Löve project and then require it.
+Just drop [anim_group.lua](https://github.com/Moligaloo/AnimGroup/blob/master/anim_group.lua) to your Löve project and then require it.
 
 # Basic tween animation
 
@@ -113,3 +113,6 @@ local anim = ag.loop{
 	action = { ... } 
 }
 ```
+
+# Demo
+Download this project and run by love executable and you will run the demo.
