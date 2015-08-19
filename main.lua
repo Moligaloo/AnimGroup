@@ -10,47 +10,43 @@ local logo1_angle = { angle = 0}
 local turn_around = false
 
 local anim = ag.sequence{
-	ag.func(function()
+	function()
 		title = 'Tween: Image drop to the screen center'
-	end),
+	end,
 	ag.tween{
 		subject = logo1_pos,
 		target = {y = (love.graphics.getHeight()-logo:getHeight())/2},
-		duration = 1, 
 		easing = 'outBounce'
 	},
 
-	ag.func(function()
+	function()
 		title = 'Delay: Do nothing for 2 seconds'
-	end),
-	ag.delay(2),
+	end,
+	2,
 
-	ag.func(function()
+	function()
 		title = 'Lazy Tween Sequence: Image walks a route like a triangle'
-	end),
+	end,
 	ag.sequence{
 		ag.lazy_tween{
 			subject = logo1_pos,
 			offset = { x = 100, y = 100},
-			duration = 1,
 		},
 		ag.lazy_tween{
 			subject = logo1_pos,
 			offset = { x = -200},
-			duration = 1
 		},
 		ag.lazy_tween{
 			subject = logo1_pos,
 			offset = { x = 100, y = -100},
-			duration = 1
 		}
 	},
 
-	ag.func(function()
+	function()
 		title = 'Parallel Animation: Two images go side'
 		logo2_pos.x = logo1_pos.x
 		logo2_pos.y = logo1_pos.y
-	end),
+	end,
 	ag.parallel{
 		ag.lazy_tween{
 			subject = logo1_pos,
@@ -62,18 +58,18 @@ local anim = ag.sequence{
 		}
 	},
 
-	ag.func(function()
+	function()
 		title = 'Loop: Turn around twice'
 		turn_around = true
 		logo2_pos.x = 10000
 		logo2_pos.y = 10000
-	end),
+	end,
 	ag.loop{
 		times = 2,
 		action = ag.tween{
 			subject = logo1_angle,
 			target = {angle = 2 * math.pi},
-			duration = 1
+			duration = 0.8
 		}
 	}
 }

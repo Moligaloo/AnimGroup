@@ -94,6 +94,14 @@ local anim = ag.sequence{
 	ag.delay(2), -- delay 2 seconds
 	ag.tween{...}
 }
+
+-- or just insert delay seconds directly
+local anim = ag.sequence{
+	ag.tween{...}, 
+	2, -- delay 2 seconds
+	ag.tween{...}
+}
+
 ```
 
 # Insert function call
@@ -104,6 +112,15 @@ local anim = ag.sequence{
 	ag.func(function() ... end), 
 	ag.tween{...}
 }
+
+-- or just insert function directly
+local anim = ag.sequence{
+	ag.tween{...}, 
+	 -- this will call after first animation is done
+	function() ... end, 
+	ag.tween{...}
+}
+
 ```
 
 # Repeat animation for specific times

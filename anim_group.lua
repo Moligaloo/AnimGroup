@@ -116,6 +116,14 @@ local delay_mt = {
 	}
 }
 
+local function delay_create(t)
+	local duration = type(t) == 'number' and t or t.duration
+	local delay_action = {left = duration, duration = duration}
+	setmetatable(delay_action, delay_mt)
+	return delay_action
+end
+
+-- tween
 local function tween_create(t)
 	local target = t.target
 	if target == nil then
@@ -159,14 +167,35 @@ local func_mt = {
 	}
 }
 
+local function func_create(t)
+	local func_action = {func = type(t) == 'function' and t or t.func}
+	setmetatable(func_action, func_mt)
+	return func_action
+end
+
+local function normalizeActions(actions)
+	local normalized = {}
+	for _, action in ipairs(actions) do
+		if type(action) == 'function' then
+			table.insert(normalized, func_create(action))
+		elseif type(action) == 'number' then
+			table.insert(normalized, delay_create(action))
+		else
+			table.insert(normalized, action)
+		end
+	end
+
+	return normalized
+end
+
 return {
 	sequence = function(t)
-		local sequence_action = { actions = t, index = 1 }
+		local sequence_action = { actions = normalizeActions(t), index = 1 }
 		setmetatable(sequence_action, sequence_mt)
 		return sequence_action
 	end,
 	parallel = function(t)
-		local parallel_action = {actions = t}
+		local parallel_action = {actions = normalizeActions(t)}
 		setmetatable(parallel_action, parallel_mt)
 		return parallel_action
 	end,
@@ -181,15 +210,6 @@ return {
 		setmetatable(lazy_tween_action, lazy_tween_mt)
 		return lazy_tween_action
 	end,
-	delay = function(t)
-		local duration = type(t) == 'number' and t or t.duration
-		local delay_action = {left = duration, duration = duration}
-		setmetatable(delay_action, delay_mt)
-		return delay_action
-	end,
-	func = function(t)
-		local func_action = {func = type(t) == 'function' and t or t.func}
-		setmetatable(func_action, func_mt)
-		return func_action
-	end
+	delay = delay_create,
+	func = func_create,
 }
