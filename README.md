@@ -76,6 +76,10 @@ local anim = ag.sequence{
 	ag.tween{...}, 
 	ag.tween{...}
 }
+
+-- more fancy way, use '+' operator
+local anim = ag.tween{...} + ag.tween{...}
+
 ```
 
 # Parallel animation group
@@ -85,50 +89,37 @@ local anim = ag.parallel{
 	ag.tween{...}, 
 	ag.tween{...}
 }
+
+-- more fancy way, use '/' operator
+local anim = ag.tween{...} / ag.tween{...}
 ```
 
 # Insert pause
 ```lua
-local anim = ag.sequence{
-	ag.tween{...}, 
-	ag.delay(2), -- delay 2 seconds
+local anim = 
+	ag.tween{...} + 
+	ag.delay(2) + -- delay 2 seconds
 	ag.tween{...}
-}
-
--- or just insert delay seconds directly
-local anim = ag.sequence{
-	ag.tween{...}, 
-	2, -- delay 2 seconds
-	ag.tween{...}
-}
-
 ```
 
 # Insert function call
 ```lua
-local anim = ag.sequence{
-	ag.tween{...}, 
+local anim = 
+	ag.tween{...} +
 	 -- this will call after first animation is done
-	ag.func(function() ... end), 
+	ag.func(function() ... end) +
 	ag.tween{...}
-}
-
--- or just insert function directly
-local anim = ag.sequence{
-	ag.tween{...}, 
-	 -- this will call after first animation is done
-	function() ... end, 
-	ag.tween{...}
-}
-
 ```
 
 # Repeat animation for specific times
 ```lua
 local anim = ag.loop{
 	times = 2,
-	action = { ... } 
+	action = ag.tween{...}
 }
+
+-- more fancy way, use '*' operator
+local anim = ag.tween{...} * 2
 ```
 
 # Demo

@@ -1,6 +1,20 @@
 
 local tween = require 'tween'
 
+local loop_create, sequence_create, parallel_create
+
+local common_multiplier = function(self, times)
+	return loop_create{action = self, times = times}
+end
+
+local common_adder = function(self, action)
+	return sequence_create{self, action}
+end
+
+local common_divider = function(self, action)
+	return parallel_create{self, action}
+end
+
 -- sequence
 local sequence_mt = {
 	__index = {
@@ -32,8 +46,20 @@ local sequence_mt = {
 				action:reset()
 			end
 		end
-	}
+	}, 
+	__mul = common_multiplier,
+	__add = function(self, action)
+		table.insert(self.actions, action)
+		return self
+	end,
+	__div = common_divider
 }
+
+sequence_create = function(t)
+	local sequence_action = { actions = t, index = 1 }
+	setmetatable(sequence_action, sequence_mt)
+	return sequence_action
+end
 
 -- parallel
 parallel_mt = {
@@ -72,8 +98,20 @@ parallel_mt = {
 				action:reset()
 			end
 		end,
-	}
+	},
+	__mul = common_multiplier,
+	__add = common_adder,
+	__div = function(self, action)
+		table.insert(self.actions, action)
+		return self
+	end
 }
+
+parallel_create = function(t)
+	local parallel_action = {actions = t}
+	setmetatable(parallel_action, parallel_mt)
+	return parallel_action
+end
 
 -- loop
 local loop_mt = {
@@ -95,8 +133,20 @@ local loop_mt = {
 			self.left = self.times
 			self.action:reset()
 		end
-	}
+	},
+	__mul = function(self, times)
+		self.times = self.times * times
+		self.left = self.times
+	end,
+	__add = common_adder,
+	__div = common_divider
 }
+
+loop_create = function(t)
+	local loop_action = {left = t.times, times = t.times, action = t.action}
+	setmetatable(loop_action, loop_mt)
+	return loop_action
+end
 	
 -- delay 
 local delay_mt = {
@@ -113,7 +163,27 @@ local delay_mt = {
 		reset = function(self)
 			self.left = self.duration
 		end
-	}
+	},
+	__mul = function(self, times)
+		self.duration = self.duration * times
+		self.left = self.duration
+	end,
+	__add = function(self, action)
+		if getmetatable(action) == delay_mt then
+			self.duration = self.duration + action.duration
+			self.left = self.duration
+		else
+			return common_adder(self, action)
+		end
+	end,
+	__div = function(self, action)
+		if getmetatable(action) == delay_mt then
+			self.duration = math.max(self.duration, action.duration)
+			self.left = self.duration
+		else
+			return common_divider(self, action)
+		end
+	end
 }
 
 local function delay_create(t)
@@ -124,6 +194,20 @@ local function delay_create(t)
 end
 
 -- tween
+local tween_mt = {
+	__index = {
+		update = function(self, dt)
+			return self.tween:update(dt)
+		end,
+		reset = function(self)
+			return self.tween:reset()
+		end
+	},
+	__mul = common_multiplier,
+	__add = common_adder,
+	__div = common_divider
+}
+
 local function tween_create(t)
 	local target = t.target
 	if target == nil then
@@ -137,7 +221,9 @@ local function tween_create(t)
 		end
 	end
 
-	return tween.new(t.duration or 1, t.subject, target, t.easing)
+	local tween_action = {tween = tween.new(t.duration or 1, t.subject, target, t.easing)}
+	setmetatable(tween_action, tween_mt)
+	return tween_action
 end
 
 -- lazy_tween 
@@ -153,8 +239,17 @@ local lazy_tween_mt = {
 		reset = function(self)
 			self.tween = nil
 		end
-	}
+	},
+	__mul = common_multiplier,
+	__add = common_adder,
+	__div = common_divider
 }
+
+local function lazy_tween_create(t)
+	local lazy_tween_action = {duration = t.duration, subject = t.subject, target = t.target, offset = t.offset, easing = t.easing}
+	setmetatable(lazy_tween_action, lazy_tween_mt)
+	return lazy_tween_action
+end
 
 -- func
 local func_mt = {
@@ -164,7 +259,10 @@ local func_mt = {
 			return true
 		end,
 		reset = function(self) end
-	}
+	},
+	__mul = common_multiplier,
+	__add = common_adder,
+	__div = common_divider
 }
 
 local function func_create(t)
@@ -173,43 +271,12 @@ local function func_create(t)
 	return func_action
 end
 
-local function normalizeActions(actions)
-	local normalized = {}
-	for _, action in ipairs(actions) do
-		if type(action) == 'function' then
-			table.insert(normalized, func_create(action))
-		elseif type(action) == 'number' then
-			table.insert(normalized, delay_create(action))
-		else
-			table.insert(normalized, action)
-		end
-	end
-
-	return normalized
-end
-
 return {
-	sequence = function(t)
-		local sequence_action = { actions = normalizeActions(t), index = 1 }
-		setmetatable(sequence_action, sequence_mt)
-		return sequence_action
-	end,
-	parallel = function(t)
-		local parallel_action = {actions = normalizeActions(t)}
-		setmetatable(parallel_action, parallel_mt)
-		return parallel_action
-	end,
-	loop = function(t)
-		local loop_action = {left = t.times, times = t.times, action = t.action}
-		setmetatable(loop_action, loop_mt)
-		return loop_action
-	end,
+	sequence = sequence_create,
+	parallel = parallel_create,
+	loop = loop_create,
 	tween = tween_create,
-	lazy_tween = function(t)
-		local lazy_tween_action = {duration = t.duration, subject = t.subject, target = t.target, offset = t.offset, easing = t.easing}
-		setmetatable(lazy_tween_action, lazy_tween_mt)
-		return lazy_tween_action
-	end,
+	lazy_tween = lazy_tween_create,
 	delay = delay_create,
 	func = func_create,
 }
