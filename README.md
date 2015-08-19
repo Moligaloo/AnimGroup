@@ -1,6 +1,6 @@
 # AnimGroup
 An animation library for löve game engine, depends on [tween.lua](https://github.com/kikito/tween.lua)
-You can make animation groups, including sequetial and parallel animation groups, 
+You can make animation groups, including sequential and parallel animation groups, 
 and insert pause for specified seconds and function call inside animation group, or loop animation for specific times.
 
 # Usage
