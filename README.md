@@ -40,7 +40,7 @@ end
 ```
 
 # Tween parameters
-`subject`,  `target` and `duration` has same meaning in tween.lua's `tween.new ` function. However,  you have to passing these parameters in table.
+`duration`, `subject`,`target` and `easing` has same meaning in tween.lua's `tween.new ` function. However,  you have to passing these parameters in table.
  * `duration` is optional (default to 1). 
  * `target` can be replaced to `offset`, this is a relative offset to subject, below code shows an animation that down to 100 pixels:
 ```lua
