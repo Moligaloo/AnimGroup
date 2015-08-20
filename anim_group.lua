@@ -194,44 +194,27 @@ local function delay_create(t)
 end
 
 -- tween
-local tween_mt = {
-	__index = {
-		update = function(self, dt)
-			return self.tween:update(dt)
-		end,
-		reset = function(self)
-			return self.tween:reset()
-		end
-	},
-	__mul = common_multiplier,
-	__add = common_adder,
-	__div = common_divider
-}
 
-local function tween_create(t)
-	local target = t.target
-	if target == nil then
-		if t.offset == nil then
-			error('target or offset of tween argument must be given')
-		end
-
-		target = {}
-		for key, value in pairs(t.offset) do
-			target[key] = t.subject[key] + t.offset[key]
-		end
-	end
-
-	local tween_action = {tween = tween.new(t.duration or 1, t.subject, target, t.easing)}
-	setmetatable(tween_action, tween_mt)
-	return tween_action
-end
-
--- lazy_tween 
 local lazy_tween_mt = {
 	__index = {
 		update = function(self, dt)
 			if self.tween == nil then
-				self.tween = tween_create(self)
+				local t = self.config
+				if t.from then
+					for key, value in pairs(t.from) do
+						t.subject[key] = value
+					end
+				end
+				
+				local target = t.target
+				if target == nil then
+					target = {}
+					for key, value in pairs(t.offset) do
+						target[key] = t.subject[key] + t.offset[key]
+					end
+				end
+
+				self.tween = tween.new(t.duration or 1, t.subject, target, t.easing)
 			end
 
 			return self.tween:update(dt)
@@ -246,7 +229,10 @@ local lazy_tween_mt = {
 }
 
 local function lazy_tween_create(t)
-	local lazy_tween_action = {duration = t.duration, subject = t.subject, target = t.target, offset = t.offset, easing = t.easing}
+	assert(type(t.subject) == 'table' or type(t.subject) == 'userdata', 'tween expect a subject')
+	assert(t.target or t.offset, 'tween expect target or offset')
+
+	local lazy_tween_action = {config = t}
 	setmetatable(lazy_tween_action, lazy_tween_mt)
 	return lazy_tween_action
 end

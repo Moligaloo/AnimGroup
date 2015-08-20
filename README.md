@@ -42,6 +42,7 @@ end
 # Tween parameters
 `duration`, `subject`,`target` and `easing` has same meaning in tween.lua's `tween.new`  function. However,  you have to pass these parameters in a table. Additionally, this library provide some extras:
  * `duration` is optional (default to 1). 
+ * Optional parameter `from`: if this parameter is given, `subject` will set fields from `from` before calculating interpolated values. It is useful when run repeated animation.
  * `target` can be replaced to `offset`, this is a relative offset to subject, below code shows an animation that down to 100 pixels:
 ```lua
 local anim = ag.tween {

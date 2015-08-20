@@ -86,6 +86,7 @@ local anim =
 	end) +
 	ag.tween{
 		subject = logo1,
+		from = {angle = 0},
 		target = {angle = 2 * math.pi},
 		duration = 0.8
 	} * 2
