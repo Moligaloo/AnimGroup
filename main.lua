@@ -9,7 +9,7 @@ Sprite.__index = Sprite
 
 function Sprite:draw()
 	if self.visible then
-		local x, y = self.x, self.y
+		local x, y = love.window.toPixels(self.x), love.window.toPixels(self.y)
 		love.graphics.draw(self.image, x, y, self.angle, 1, 1, self.image:getWidth()/2, self.image:getHeight()/2)
 	end
 end
@@ -21,8 +21,8 @@ function Sprite.new(image, x, y)
 end
 
 local screen_center = {
-	x = love.graphics.getWidth()/2, 
-	y = love.graphics.getHeight()/2
+	x = love.window.getWidth()/2, 
+	y = love.window.getHeight()/2
 }
 
 local logo1 = Sprite.new(logo, screen_center.x, 0)
