@@ -195,7 +195,7 @@ end
 
 -- tween
 
-local lazy_tween_mt = {
+local tween_mt = {
 	__index = {
 		update = function(self, dt)
 			if self.tween == nil then
@@ -228,13 +228,13 @@ local lazy_tween_mt = {
 	__div = common_divider
 }
 
-local function lazy_tween_create(t)
+local function tween_create(t)
 	assert(type(t.subject) == 'table' or type(t.subject) == 'userdata', 'tween expect a subject')
 	assert(t.target or t.offset, 'tween expect target or offset')
 
-	local lazy_tween_action = {config = t}
-	setmetatable(lazy_tween_action, lazy_tween_mt)
-	return lazy_tween_action
+	local tween_action = {config = t}
+	setmetatable(tween_action, tween_mt)
+	return tween_action
 end
 
 -- func
@@ -261,7 +261,7 @@ return {
 	sequence = sequence_create,
 	parallel = parallel_create,
 	loop = loop_create,
-	tween = lazy_tween_create,
+	tween = tween_create,
 	delay = delay_create,
 	func = func_create,
 }
