@@ -15,7 +15,7 @@ function Sprite:draw()
 end
 
 function Sprite.new(image, x, y)
-	local sprite = {image = image, x = x, y = y, angle = 0, visible = true, using_angle = false}
+	local sprite = {image = image, x = x, y = y, angle = 0, visible = true}
 	setmetatable(sprite, Sprite)
 	return sprite
 end
