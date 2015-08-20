@@ -35,7 +35,7 @@ local anim =
 	end) +
 	ag.tween{
 		subject = logo1,
-		target = {y = screen_center.y},
+		to = {y = screen_center.y},
 		easing = 'outBounce'
 	} +
 
@@ -87,7 +87,7 @@ local anim =
 	ag.tween{
 		subject = logo1,
 		from = {angle = 0},
-		target = {angle = 2 * math.pi},
+		to = {angle = 2 * math.pi},
 		duration = 0.8
 	} * 2
 

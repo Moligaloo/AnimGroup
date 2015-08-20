@@ -206,7 +206,7 @@ local tween_mt = {
 					end
 				end
 				
-				local target = t.target
+				local target = t.to
 				if target == nil then
 					target = {}
 					for key, value in pairs(t.offset) do
@@ -230,7 +230,7 @@ local tween_mt = {
 
 local function tween_create(t)
 	assert(type(t.subject) == 'table' or type(t.subject) == 'userdata', 'tween expect a subject')
-	assert(t.target or t.offset, 'tween expect target or offset')
+	assert(t.to or t.offset, 'tween expect to or offset')
 
 	local tween_action = {config = t}
 	setmetatable(tween_action, tween_mt)
