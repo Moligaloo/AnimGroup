@@ -48,15 +48,15 @@ local anim =
 		title = 'Lazy Tween Sequence: Image walks a route like a triangle'
 	end) + 
 	(
-		ag.lazy_tween{
+		ag.tween{
 			subject = logo1,
 			offset = { x = 100, y = 100},
 		} + 
-		ag.lazy_tween{
+		ag.tween{
 			subject = logo1,
 			offset = { x = -200},
 		} +
-		ag.lazy_tween{
+		ag.tween{
 			subject = logo1,
 			offset = { x = 100, y = -100},
 		}
@@ -68,11 +68,11 @@ local anim =
 		logo2.visible = true
 	end) + 
 	(
-		ag.lazy_tween{
+		ag.tween{
 			subject = logo1,
 			offset = {x = -300}
 		} /
-		ag.lazy_tween{
+		ag.tween{
 			subject = logo2,
 			offset = {x = 300}
 		}

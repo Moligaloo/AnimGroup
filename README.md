@@ -40,7 +40,7 @@ end
 ```
 
 # Tween parameters
-`duration`, `subject`,`target` and `easing` has same meaning in tween.lua's `tween.new ` function. However,  you have to passing these parameters in table.
+`duration`, `subject`,`target` and `easing` has same meaning in tween.lua's `tween.new`  function. However,  you have to pass these parameters in a table. Additionally, this library provide some extras:
  * `duration` is optional (default to 1). 
  * `target` can be replaced to `offset`, this is a relative offset to subject, below code shows an animation that down to 100 pixels:
 ```lua
@@ -50,27 +50,11 @@ local anim = ag.tween {
 }
 ```
 
-# Lazy Tween animation
-Lazy tween animation is that tween's internal interpolated values are calculated when animation is run instead of the animation being created, this is useful when creating consecutive animation.
-
-```lua
-local anim = ag.sequence{
-	ag.lazy_tween{
-		subject = values,
-		offset = { y = 100}
-	},
-	ag.lazy_tween{
-		subject = values,
-		offset = { y = 100}
-	}
-}
-```
-
-If you use normal tween animation, as its interpolated values is calculated when being created, you will see animation down 100 pixel and then back to original position and then down 100 pixels. If you use lazy tween, then animation is down 100 pixels twice, and don't back when first animation is done.
+NOTE: Tween animation's internal interpolated values are calculated when run instead of being created.
 
 # Sequential animation group
 
-The two animations will run sequentially
+The two animations will group into one and run sequentially
 ```lua
 local anim = ag.sequence{
 	ag.tween{...}, 
@@ -83,7 +67,7 @@ local anim = ag.tween{...} + ag.tween{...}
 ```
 
 # Parallel animation group
-The two animations will run parallel
+The two animations will group into one and run parallel
 ```lua
 local anim = ag.parallel{
 	ag.tween{...}, 
@@ -94,7 +78,7 @@ local anim = ag.parallel{
 local anim = ag.tween{...} / ag.tween{...}
 ```
 
-# Insert pause
+# Insert a pause for a specified duration
 ```lua
 local anim = 
 	ag.tween{...} + 

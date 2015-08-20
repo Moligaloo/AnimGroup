@@ -275,8 +275,7 @@ return {
 	sequence = sequence_create,
 	parallel = parallel_create,
 	loop = loop_create,
-	tween = tween_create,
-	lazy_tween = lazy_tween_create,
+	tween = lazy_tween_create,
 	delay = delay_create,
 	func = func_create,
 }
