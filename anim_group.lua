@@ -237,6 +237,19 @@ local function tween_create(t)
 	return tween_action
 end
 
+-- tween_group
+
+local function tween_group_create(t)
+	local subject = t.subject
+	local actions = {}
+	for _, tween in ipairs(t.tweens) do
+		tween.subject = subject
+		table.insert(actions, tween_create(tween))
+	end
+
+	return (t.order == 'parallel') and parallel_create(actions) or sequence_create(actions)
+end
+
 -- func
 local func_mt = {
 	__index = {
@@ -262,6 +275,7 @@ return {
 	parallel = parallel_create,
 	loop = loop_create,
 	tween = tween_create,
+	tween_group = tween_group_create,
 	delay = delay_create,
 	func = func_create,
 }
