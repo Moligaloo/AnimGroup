@@ -74,9 +74,11 @@ local anim =
 		} /
 		ag.tween{
 			subject = logo2,
-			offset = {x = 300}
+			offset = {x = 300},
+			duration = 2
 		}
 	) +
+	ag.delay(0.5) +
 
 	ag.func(function()
 		title = 'Loop: Turn around twice'
