@@ -65,31 +65,15 @@ end
 parallel_mt = {
 	__index = {
 		update = function(self, dt)
-			local doneList = self.doneList 
-			if doneList == nil then
-				doneList = {}
-				self.doneList = doneList
-
-				for i=1, #self.actions do
-					table.insert(doneList, false)
+			local all_complete = true
+			for _, action in ipairs(self.actions) do
+				local complete = action:update(dt)
+				if not complete then
+					all_complete = false
 				end
 			end
 
-			for i=1, #doneList do
-				if doneList[i] == false then
-					doneList[i] = self.actions[i]:update(dt)
-				end
-			end
-
-			local allDone = true
-			for _, done in ipairs(doneList) do
-				if done == false then
-					allDone = false
-					break
-				end
-			end
-
-			return allDone
+			return all_complete
 		end,
 		reset = function(self)
 			self.doneList = nil
