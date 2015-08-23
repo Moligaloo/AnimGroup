@@ -76,8 +76,6 @@ parallel_mt = {
 			return all_complete
 		end,
 		reset = function(self)
-			self.doneList = nil
-
 			for _, action in ipairs(self.actions) do
 				action:reset()
 			end
