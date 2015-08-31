@@ -4,7 +4,7 @@ local tween = require 'tween'
 local loop_create, sequence_create, parallel_create
 
 local common_multiplier = function(self, times)
-	return loop_create{action = self, times = times}
+	return loop_create(self, times)
 end
 
 local common_adder = function(self, action)
@@ -95,10 +95,36 @@ parallel_create = function(t)
 	return parallel_action
 end
 
+-- empty action
+local empty_action = {}
+local empty_mt = {
+	__index = {
+		update = function(self, dt)
+			return true
+		end,
+		reset = function(self)
+		end
+	},
+	__mul = function(self, times)
+		return self
+	end,
+	__add = function(self, another)
+		return another
+	end,
+	__div = function(self, another)
+		return another
+	end
+}
+setmetatable(empty_action, empty_mt)
+
 -- loop
-local loop_mt = {
+local loop_number_mt = {
 	__index = {	
 		update = function(self, dt)
+			if self.left == nil then
+				self.left = self.times
+			end
+
 			local complete = self.action:update(dt)
 			if complete then
 				self.left = self.left - 1
@@ -112,22 +138,50 @@ local loop_mt = {
 			return false
 		end,
 		reset = function(self)
-			self.left = self.times
+			self.left = nil
 			self.action:reset()
 		end
 	},
 	__mul = function(self, times)
 		self.times = self.times * times
-		self.left = self.times
 	end,
 	__add = common_adder,
 	__div = common_divider
 }
 
-loop_create = function(t)
-	local loop_action = {left = t.times, times = t.times, action = t.action}
-	setmetatable(loop_action, loop_mt)
-	return loop_action
+local loop_function_mt = {
+	__index = {
+		update = function(self, dt)
+			local continue = self.condition()
+			if continue then
+				local complete = self.action:update(dt)
+				if complete then
+					self.action:reset()
+				end
+				return false
+			else
+				return true
+			end
+		end,
+		reset = function(self)
+			self.action:reset()
+		end,
+	},
+	__mul = common_multiplier,
+	__add = common_adder,
+	__div = common_divider
+}
+
+loop_create = function(action, times)
+	if times == true or times == 1 then
+		return action
+	elseif times == false or times == nil or times == 0 then
+		return empty_action
+	elseif type(times) == 'number' then
+		return setmetatable({action = action, times = times}, loop_number_mt)
+	elseif type(times) == 'function' then
+		return setmetatable({action = action, condition = times}, loop_function_mt)
+	end
 end
 	
 -- delay 
@@ -255,7 +309,6 @@ end
 return {
 	sequence = sequence_create,
 	parallel = parallel_create,
-	loop = loop_create,
 	tween = tween_create,
 	tween_group = tween_group_create,
 	delay = delay_create,
