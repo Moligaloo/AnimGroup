@@ -98,12 +98,6 @@ local anim =
 
 # Repeat animation for specific times
 ```lua
-local anim = ag.loop{
-	times = 2,
-	action = ag.tween{...}
-}
-
--- more fancy way, use '*' operator
 local anim = ag.tween{...} * 2
 ```
 
