@@ -152,7 +152,7 @@ local loop_number_mt = {
 local loop_function_mt = {
 	__index = {
 		update = function(self, dt)
-			local continue = self.condition()
+			local continue = self:condition()
 			if continue then
 				local complete = self.action:update(dt)
 				if complete then
@@ -290,7 +290,7 @@ end
 local func_mt = {
 	__index = {
 		update = function(self, dt)
-			self.func()
+			self:func()
 			return true
 		end,
 		reset = function(self) end
@@ -301,9 +301,7 @@ local func_mt = {
 }
 
 local function func_create(t)
-	local func_action = {func = type(t) == 'function' and t or t.func}
-	setmetatable(func_action, func_mt)
-	return func_action
+	return setmetatable({func = type(t) == 'function' and t or t.func}, func_mt)
 end
 
 return {
