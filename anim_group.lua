@@ -245,8 +245,8 @@ local tween_mt = {
 				local target = t.to
 				if target == nil then
 					target = {}
-					for key, value in pairs(t.offset) do
-						target[key] = t.subject[key] + t.offset[key]
+					for key, value in pairs(t.delta) do
+						target[key] = t.subject[key] + t.delta[key]
 					end
 				end
 
@@ -266,7 +266,7 @@ local tween_mt = {
 
 local function tween_create(t)
 	assert(type(t.subject) == 'table' or type(t.subject) == 'userdata', 'tween expect a subject')
-	assert(t.to or t.offset, 'tween expect to or offset')
+	assert(t.to or t.delta, 'tween expect to or delta')
 
 	local tween_action = {config = t}
 	setmetatable(tween_action, tween_mt)

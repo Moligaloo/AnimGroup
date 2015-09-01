@@ -50,15 +50,15 @@ local anim =
 	(
 		ag.tween{
 			subject = logo1,
-			offset = { x = 100, y = 100},
+			delta = { x = 100, y = 100},
 		} + 
 		ag.tween{
 			subject = logo1,
-			offset = { x = -200},
+			delta = { x = -200},
 		} +
 		ag.tween{
 			subject = logo1,
-			offset = { x = 100, y = -100},
+			delta = { x = 100, y = -100},
 		}
 	) +
 
@@ -70,11 +70,11 @@ local anim =
 	(
 		ag.tween{
 			subject = logo1,
-			offset = {x = -300}
+			delta = {x = -300}
 		} /
 		ag.tween{
 			subject = logo2,
-			offset = {x = 300},
+			delta = {x = 300},
 			duration = 2
 		}
 	) +
