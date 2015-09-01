@@ -313,4 +313,6 @@ return {
 	tween_group = tween_group_create,
 	delay = delay_create,
 	func = func_create,
+
+	infinite_loop = function() return true end
 }
