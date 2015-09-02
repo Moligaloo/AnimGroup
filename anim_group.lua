@@ -15,24 +15,25 @@ local common_divider = function(self, action)
 	return parallel_create{self, action}
 end
 
+local dummy_func = function() end
+
 -- sequence
 local sequence_mt = {
 	__index = {
 		update = function(self, dt)
 			if self.index == nil then
-				return true 
+				self.index = 1
 			end
 
 			local action = self.actions[self.index]
 			if action == nil then
-				return true 
+				return true
 			end
 
 			local complete = action:update(dt)
 			if complete then
 				self.index = self.index + 1
 				if self.actions[self.index] == nil then
-					self.index = nil
 					return true
 				end
 			end
@@ -40,11 +41,22 @@ local sequence_mt = {
 			return false
 		end,
 		reset = function(self)
-			self.index = 1
-
+			self.index = nil
 			for _, action in ipairs(self.actions) do
 				action:reset()
 			end
+		end,
+		estimated_duration = function(self)
+			local sum = 0
+			for _, action in ipairs(self.actions) do
+				local duration = action:estimated_duration()
+				if duration == nil then
+					return nil
+				else
+					sum = sum + duration
+				end
+			end
+			return sum
 		end
 	}, 
 	__mul = common_multiplier,
@@ -56,9 +68,7 @@ local sequence_mt = {
 }
 
 sequence_create = function(t)
-	local sequence_action = { actions = t, index = 1 }
-	setmetatable(sequence_action, sequence_mt)
-	return sequence_action
+	return setmetatable({ actions = t }, sequence_mt)
 end
 
 -- parallel
@@ -80,6 +90,18 @@ parallel_mt = {
 				action:reset()
 			end
 		end,
+		estimated_duration = function(self)
+			local max = 0
+			for _, action in ipairs(self.actions) do
+				local duration = action:estimated_duration()
+				if duration == nil then
+					return nil
+				else
+					max = math.max(max, duration)
+				end
+			end
+			return max
+		end
 	},
 	__mul = common_multiplier,
 	__add = common_adder,
@@ -102,7 +124,9 @@ local empty_mt = {
 		update = function(self, dt)
 			return true
 		end,
-		reset = function(self)
+		reset = dummy_func,
+		estimated_duration = function()
+			return 0
 		end
 	},
 	__mul = function(self, times)
@@ -140,6 +164,12 @@ local loop_number_mt = {
 		reset = function(self)
 			self.left = nil
 			self.action:reset()
+		end,
+		estimated_duration = function(self)
+			local duration = self.action:estimated_duration()
+			if duration then
+				return duration * self.times
+			end
 		end
 	},
 	__mul = function(self, times)
@@ -166,6 +196,7 @@ local loop_function_mt = {
 		reset = function(self)
 			self.action:reset()
 		end,
+		estimated_duration = dummy_func,
 	},
 	__mul = common_multiplier,
 	__add = common_adder,
@@ -198,6 +229,9 @@ local delay_mt = {
 		end,
 		reset = function(self)
 			self.left = self.duration
+		end,
+		estimated_duration = function(self)
+			return self.duration
 		end
 	},
 	__mul = function(self, times)
@@ -257,6 +291,9 @@ local tween_mt = {
 		end,
 		reset = function(self)
 			self.tween = nil
+		end,
+		estimated_duration = function(self)
+			return self.config.duration or 1
 		end
 	},
 	__mul = common_multiplier,
@@ -293,7 +330,10 @@ local func_mt = {
 			self:func()
 			return true
 		end,
-		reset = function(self) end
+		reset = dummy_func,
+		estimated_duration = function(self)
+			return 0
+		end
 	},
 	__mul = common_multiplier,
 	__add = common_adder,
