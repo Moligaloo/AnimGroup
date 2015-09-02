@@ -182,15 +182,32 @@ local loop_number_mt = {
 local loop_function_mt = {
 	__index = {
 		update = function(self, dt)
-			local continue = self:condition()
-			if continue then
+			local state = self:condition()
+			if state == 'running' then
 				local complete = self.action:update(dt)
 				if complete then
 					self.action:reset()
 				end
 				return false
-			else
+			elseif state == 'paused' then
+				return false
+			elseif state == 'stopped' then
 				return true
+			elseif state == 'once' then
+				local action = self.action
+				for k in pairs(self) do
+					self[k] = nil
+				end
+
+				for k,v in pairs(action) do
+					self[k] = v
+				end
+
+				setmetatable(self, getmetatable(action))
+
+				return self:update(dt)
+			else
+				error('Unknown state ' .. tostring(state))
 			end
 		end,
 		reset = function(self)
@@ -354,5 +371,5 @@ return {
 
 	empty = empty_action,
 
-	infinite_loop = function() return true end
+	infinite_loop = function() return 'running' end
 }
