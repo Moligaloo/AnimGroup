@@ -312,5 +312,7 @@ return {
 	delay = delay_create,
 	func = func_create,
 
+	empty = empty_action,
+
 	infinite_loop = function() return true end
 }
