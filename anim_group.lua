@@ -1,7 +1,7 @@
 
 local tween = require 'tween'
 
-local loop_create, sequence_create, parallel_create
+local loop_create, sequence_create, parallel_create, empty_action
 
 local common_multiplier = function(self, times)
 	return loop_create(self, times)
@@ -29,6 +29,21 @@ local become = function(a, b)
 	extend(a, b)
 
 	setmetatable(a, getmetatable(b))
+end
+
+local nonempty_actions = function(actions)
+	local filtered = {}
+	for _, action in ipairs(actions) do
+		if action ~= empty_action then
+			table.insert(filtered, action)
+		end
+	end
+
+	if next(filtered) then
+		return filtered
+	else
+		return nil
+	end
 end
 
 local dummy_func = function() end
@@ -83,8 +98,17 @@ local sequence_mt = {
 	__div = common_divider
 }
 
+local function anim_group_create(actions, mt)
+	local actions = nonempty_actions(actions)
+	if actions then
+		return setmetatable({ actions = actions }, mt)
+	else
+		return empty_action
+	end
+end
+
 sequence_create = function(t)
-	return setmetatable({ actions = t }, sequence_mt)
+	return anim_group_create(t, sequence_mt)
 end
 
 -- parallel
@@ -128,13 +152,11 @@ parallel_mt = {
 }
 
 parallel_create = function(t)
-	local parallel_action = {actions = t}
-	setmetatable(parallel_action, parallel_mt)
-	return parallel_action
+	return anim_group_create(t, parallel_mt)
 end
 
 -- empty action
-local empty_action = {}
+empty_action = {}
 local empty_mt = {
 	__index = {
 		update = function(self, dt)
