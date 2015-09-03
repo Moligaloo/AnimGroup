@@ -15,6 +15,22 @@ local common_divider = function(self, action)
 	return parallel_create{self, action}
 end
 
+local extend = function(a, b)
+	for k, v in pairs(b) do
+		a[k] = v
+	end
+end
+
+local become = function(a, b)
+	for k in pairs(a) do
+		a[k] = nil
+	end
+
+	extend(a, b)
+
+	setmetatable(a, getmetatable(b))
+end
+
 local dummy_func = function() end
 
 -- sequence
@@ -194,17 +210,7 @@ local loop_function_mt = {
 			elseif state == 'stopped' then
 				return true
 			elseif state == 'once' then
-				local action = self.action
-				for k in pairs(self) do
-					self[k] = nil
-				end
-
-				for k,v in pairs(action) do
-					self[k] = v
-				end
-
-				setmetatable(self, getmetatable(action))
-
+				become(self, self.action)
 				return self:update(dt)
 			else
 				error('Unknown state ' .. tostring(state))
@@ -288,9 +294,7 @@ local tween_mt = {
 			if self.tween == nil then
 				local t = self.config
 				if t.from then
-					for key, value in pairs(t.from) do
-						t.subject[key] = value
-					end
+					extend(t.subject, t.from)
 				end
 				
 				local target = t.to
