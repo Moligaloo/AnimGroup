@@ -210,9 +210,7 @@ local loop_number_mt = {
 			end
 		end
 	},
-	__mul = function(self, times)
-		self.times = self.times * times
-	end,
+	__mul = common_multiplier,
 	__add = common_adder,
 	__div = common_divider
 }
@@ -254,7 +252,12 @@ loop_create = function(action, times)
 	elseif times == false or times == nil or times == 0 then
 		return empty_action
 	elseif type(times) == 'number' then
-		return setmetatable({action = action, times = times}, loop_number_mt)
+		if getmetatable(action) == loop_number_mt then
+			action.times = action.times * times
+			return action
+		else
+			return setmetatable({action = action, times = times}, loop_number_mt)
+		end
 	elseif type(times) == 'function' then
 		return setmetatable({action = action, condition = times}, loop_function_mt)
 	end
