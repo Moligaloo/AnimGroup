@@ -52,27 +52,24 @@ local dummy_func = function() end
 local sequence_mt = {
 	__index = {
 		update = function(self, dt)
-			if self.index == nil then
-				self.index = 1
-			end
-
-			local action = self.actions[self.index]
-			if action == nil then
-				return true
-			end
-
-			local complete = action:update(dt)
-			if complete then
-				self.index = self.index + 1
-				if self.actions[self.index] == nil then
-					return true
+			self.update = coroutine.wrap(function(self, dt)
+				for _, action in ipairs(self.actions) do
+					local complete = false
+					repeat
+						complete = action:update(dt)
+						self, dt = coroutine.yield(false)
+					until complete
 				end
-			end
 
-			return false
+				while true do
+					coroutine.yield(true)
+				end
+			end)
+
+			return self:update(dt)
 		end,
 		reset = function(self)
-			self.index = nil
+			self.update = nil
 			for _, action in ipairs(self.actions) do
 				action:reset()
 			end
