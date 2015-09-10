@@ -383,8 +383,8 @@ local func_mt = {
 	__div = common_divider
 }
 
-local function func_create(t)
-	return setmetatable({func = type(t) == 'function' and t or t.func}, func_mt)
+local function func_create(func)
+	return setmetatable({func = func}, func_mt)
 end
 
 return {
