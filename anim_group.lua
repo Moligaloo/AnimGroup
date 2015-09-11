@@ -113,11 +113,7 @@ local sequence_mt = {
 
 local function anim_group_create(actions, mt)
 	local actions = nonempty_actions(actions)
-	if actions then
-		return setmetatable({ actions = actions }, mt)
-	else
-		return empty_action
-	end
+	return actions and setmetatable({ actions = actions }, mt) or empty_action
 end
 
 sequence_create = function(t)
