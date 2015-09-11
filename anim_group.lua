@@ -135,9 +135,7 @@ parallel_mt = {
 			return all_complete
 		end,
 		reset = function(self)
-			for _, action in ipairs(self.actions) do
-				action:reset()
-			end
+			invoke(self.actions, 'reset')
 		end,
 		estimated_duration = function(self)
 			local max = 0
