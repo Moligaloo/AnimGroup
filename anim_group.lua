@@ -189,25 +189,19 @@ setmetatable(empty_action, empty_mt)
 -- loop
 local loop_number_mt = {
 	__index = {	
-		update = function(self, dt)
-			if self.left == nil then
-				self.left = self.times
+		step = function(self, dt)
+			for i=1, self.times do
+				local complete = false
+				repeat
+					complete = self.action:update(dt)
+					dt = next_dt()
+				until complete
+				self.action:reset()
 			end
-
-			local complete = self.action:update(dt)
-			if complete then
-				self.left = self.left - 1
-				if self.left == 0 then
-					return true
-				else
-					self.action:reset()
-				end
-			end
-
-			return false
 		end,
+		update = common_update,
 		reset = function(self)
-			self.left = nil
+			self.update = nil
 			self.action:reset()
 		end,
 		estimated_duration = function(self)
