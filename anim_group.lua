@@ -309,28 +309,28 @@ end
 
 local tween_mt = {
 	__index = {
-		update = function(self, dt)
-			if self.tween == nil then
-				local t = self.config
-				if t.from then
-					extend(t.subject, t.from)
+		step = function(self, dt)
+			local t = self.config
+			if t.from then
+				extend(t.subject, t.from)
+			end
+			
+			local target = t.to
+			if target == nil then
+				target = {}
+				for key, value in pairs(t.delta) do
+					target[key] = t.subject[key] + t.delta[key]
 				end
-				
-				local target = t.to
-				if target == nil then
-					target = {}
-					for key, value in pairs(t.delta) do
-						target[key] = t.subject[key] + t.delta[key]
-					end
-				end
-
-				self.tween = tween.new(t.duration or 1, t.subject, target, t.easing)
 			end
 
-			return self.tween:update(dt)
+			local tween = tween.new(self:estimated_duration(), t.subject, target, t.easing)
+			while not tween:update(dt) do
+				dt = next_dt(dt)
+			end
 		end,
+		update = common_update,
 		reset = function(self)
-			self.tween = nil
+			self.update = nil
 		end,
 		estimated_duration = function(self)
 			return self.config.duration or 1
