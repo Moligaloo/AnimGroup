@@ -305,11 +305,8 @@ local delay_mt = {
 	end
 }
 
-local function delay_create(t)
-	local duration = type(t) == 'number' and t or t.duration
-	local delay_action = {left = duration, duration = duration}
-	setmetatable(delay_action, delay_mt)
-	return delay_action
+local function delay_create(duration)
+	return setmetatable({duration = duration}, delay_mt)
 end
 
 -- tween
