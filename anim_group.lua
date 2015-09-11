@@ -71,11 +71,9 @@ local sequence_mt = {
 	__index = {
 		step = function(self, dt)
 			for _, action in ipairs(self.actions) do
-				local complete = false
-				repeat
-					complete = action:update(dt)
+				while not action:update(dt) do
 					dt = next_dt()
-				until complete
+				end
 			end
 		end,
 		update = common_update,
@@ -184,11 +182,9 @@ local loop_number_mt = {
 	__index = {	
 		step = function(self, dt)
 			for i=1, self.times do
-				local complete = false
-				repeat
-					complete = self.action:update(dt)
+				while not self.action:update(dt) do
 					dt = next_dt()
-				until complete
+				end
 				self.action:reset()
 			end
 		end,
