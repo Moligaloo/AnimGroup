@@ -50,6 +50,12 @@ local become = function(a, b)
 	setmetatable(a, getmetatable(b))
 end
 
+local invoke = function(list, method_name)
+	for _, elem in ipairs(list) do
+		elem[method_name](elem)
+	end
+end
+
 local nonempty_actions = function(actions)
 	local filtered = {}
 	for _, action in ipairs(actions) do
@@ -82,9 +88,7 @@ local sequence_mt = {
 		update = common_update,
 		reset = function(self)
 			self.update = nil
-			for _, action in ipairs(self.actions) do
-				action:reset()
-			end
+			invoke(self.actions, 'reset')
 		end,
 		estimated_duration = function(self)
 			local sum = 0
