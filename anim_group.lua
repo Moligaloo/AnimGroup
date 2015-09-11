@@ -15,6 +15,25 @@ local common_divider = function(self, action)
 	return parallel_create{self, action}
 end
 
+local common_update = function(self, dt)
+	self.update = coroutine.wrap(
+		function(self, dt)
+			self:step(dt)
+
+			while true do
+				coroutine.yield(true)
+			end
+		end
+	)
+
+	return self:update(dt)
+end
+
+local next_dt = function()
+	local self, dt = coroutine.yield(false)
+	return dt
+end
+
 local extend = function(a, b)
 	for k, v in pairs(b) do
 		a[k] = v
@@ -51,23 +70,16 @@ local dummy_func = function() end
 -- sequence
 local sequence_mt = {
 	__index = {
-		update = function(self, dt)
-			self.update = coroutine.wrap(function(self, dt)
-				for _, action in ipairs(self.actions) do
-					local complete = false
-					repeat
-						complete = action:update(dt)
-						self, dt = coroutine.yield(false)
-					until complete
-				end
-
-				while true do
-					coroutine.yield(true)
-				end
-			end)
-
-			return self:update(dt)
+		step = function(self, dt)
+			for _, action in ipairs(self.actions) do
+				local complete = false
+				repeat
+					complete = action:update(dt)
+					dt = next_dt()
+				until complete
+			end
 		end,
+		update = common_update,
 		reset = function(self)
 			self.update = nil
 			for _, action in ipairs(self.actions) do
