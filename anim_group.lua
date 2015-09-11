@@ -267,30 +267,33 @@ end
 -- delay 
 local delay_mt = {
 	__index = {
-		update = function(self, dt)
-			local new_value = self.left - dt
-			if new_value <= 0 then
-				return true
-			else
-				self.left = new_value
-				return false
+		step = function(self, dt)
+			local left = self.duration
+			while left > 0 do
+				left = left - dt
+				dt = next_dt()
 			end
 		end,
+		update = common_update,
 		reset = function(self)
-			self.left = self.duration
+			self.update = nil
 		end,
 		estimated_duration = function(self)
 			return self.duration
 		end
 	},
 	__mul = function(self, times)
-		self.duration = self.duration * times
-		self.left = self.duration
+		if type(times) == 'number' then
+			self.duration = self.duration * times
+			return self
+		else
+			return common_multiplier(self, times)
+		end
 	end,
 	__add = function(self, action)
 		if getmetatable(action) == delay_mt then
 			self.duration = self.duration + action.duration
-			self.left = self.duration
+			return self
 		else
 			return common_adder(self, action)
 		end
@@ -298,7 +301,7 @@ local delay_mt = {
 	__div = function(self, action)
 		if getmetatable(action) == delay_mt then
 			self.duration = math.max(self.duration, action.duration)
-			self.left = self.duration
+			return self
 		else
 			return common_divider(self, action)
 		end
