@@ -370,10 +370,10 @@ end
 -- func
 local func_mt = {
 	__index = {
-		update = function(self, dt)
+		step = function(self, dt)
 			self:func()
-			return true
 		end,
+		update = common_update,
 		reset = dummy_func,
 		estimated_duration = function(self)
 			return 0
