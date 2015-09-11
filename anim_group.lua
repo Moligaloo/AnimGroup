@@ -56,19 +56,12 @@ local invoke = function(list, method_name)
 	end
 end
 
-local nonempty_actions = function(actions)
-	local filtered = {}
-	for _, action in ipairs(actions) do
-		if action ~= empty_action then
-			table.insert(filtered, action)
-		end
+local map = function(list, func)
+	local results = {}
+	for _, elem in ipairs(list) do
+		table.insert(results, func(elem))
 	end
-
-	if next(filtered) then
-		return filtered
-	else
-		return nil
-	end
+	return results
 end
 
 local dummy_func = function() end
@@ -112,8 +105,8 @@ local sequence_mt = {
 }
 
 local function anim_group_create(actions, mt)
-	local actions = nonempty_actions(actions)
-	return actions and setmetatable({ actions = actions }, mt) or empty_action
+	local actions = map(actions, function(action) if action ~= empty_action then return action end end)
+	return next(actions) and setmetatable({ actions = actions }, mt) or empty_action
 end
 
 sequence_create = function(t)
@@ -348,26 +341,17 @@ local tween_mt = {
 	__div = common_divider
 }
 
-local function tween_create(t)
-	assert(type(t.subject) == 'table' or type(t.subject) == 'userdata', 'tween expect a subject')
-	assert(t.to or t.delta, 'tween expect to or delta')
-
-	local tween_action = {config = t}
-	setmetatable(tween_action, tween_mt)
-	return tween_action
+local function tween_create(config)
+	return setmetatable({config = config}, tween_mt)
 end
 
 -- tween_group
 
 local function tween_group_create(t)
 	local subject = t.subject
-	local actions = {}
-	for _, tween in ipairs(t.tweens) do
-		tween.subject = subject
-		table.insert(actions, tween_create(tween))
-	end
-
-	return (t.order == 'parallel') and parallel_create(actions) or sequence_create(actions)
+	return ((t.order == 'parallel') and parallel_create or sequence_create)(
+		map(t.tweens, function(tween) tween.subject = subject; return tween_create(tween) end)
+	)
 end
 
 -- func
