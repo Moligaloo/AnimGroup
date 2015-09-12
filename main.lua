@@ -31,6 +31,21 @@ logo2.visible = false
 
 local anim = 
 	ag.func(function()
+		title = 'Go around'
+	end) +
+	ag.tween{
+		subject = {angle = 0},
+		to = {angle = math.pi * 2},
+		duration = 2
+	} * function(anim)
+		local angle = anim.action.config.subject.angle
+		local radius = 100
+		logo1.x = screen_center.x + math.cos(angle) * radius
+		logo1.y = screen_center.y + math.sin(angle) * radius
+	end +
+	ag.func(function()
+		logo1.x = screen_center.x
+		logo1.y = 0
 		title = 'Tween: Image drop to the screen center'
 	end) +
 	ag.tween{
