@@ -3,32 +3,6 @@ local tween = require 'tween'
 
 local loop_create, sequence_create, parallel_create, empty_action
 
-local common_multiplier = function(self, times)
-	return loop_create(self, times)
-end
-
-local common_adder = function(self, action)
-	return sequence_create{self, action}
-end
-
-local common_divider = function(self, action)
-	return parallel_create{self, action}
-end
-
-local common_update = function(self, dt)
-	self.update = coroutine.wrap(
-		function(self, dt)
-			self:step(dt)
-
-			while true do
-				coroutine.yield(true)
-			end
-		end
-	)
-
-	return self:update(dt)
-end
-
 local next_dt = function()
 	local self, dt = coroutine.yield(false)
 	return dt
@@ -66,8 +40,58 @@ end
 
 local dummy_func = function() end
 
+local create_mt = function(config)
+	local mt = {
+		__index = {}
+	}
+	function mt:__add(action)
+		return sequence_create{self, action}
+	end
+	function mt:__mul(action)
+		return loop_create(self, action)
+	end
+	function mt:__div(action)
+		return parallel_create{self, action}
+	end
+
+	function mt.__index:update(dt)
+		if self.step == nil then
+			error("step method should be implemented")
+		end
+		self.update = coroutine.wrap(
+			function(self, dt)
+				self:step(dt)
+
+				while true do
+					coroutine.yield(true)
+				end
+			end
+		)
+
+		return self:update(dt)
+	end
+
+	function mt.__index:reset()
+		self.update = nil
+	end
+
+	function mt.__index:estimated_duration()
+		return nil
+	end
+
+	for k, v in pairs(config) do
+		if k == '__index' then
+			extend(mt.__index, v)
+		else
+			mt[k] = v
+		end
+	end
+
+	return mt
+end
+
 -- sequence
-local sequence_mt = {
+local sequence_mt = create_mt {
 	__index = {
 		step = function(self, dt)
 			for _, action in ipairs(self.actions) do
@@ -76,7 +100,6 @@ local sequence_mt = {
 				end
 			end
 		end,
-		update = common_update,
 		reset = function(self)
 			self.update = nil
 			invoke(self.actions, 'reset')
@@ -93,13 +116,11 @@ local sequence_mt = {
 			end
 			return sum
 		end
-	}, 
-	__mul = common_multiplier,
+	},
 	__add = function(self, action)
 		table.insert(self.actions, action)
 		return self
 	end,
-	__div = common_divider
 }
 
 local function anim_group_create(actions, mt)
@@ -112,7 +133,7 @@ sequence_create = function(t)
 end
 
 -- parallel
-parallel_mt = {
+parallel_mt = create_mt{
 	__index = {
 		update = function(self, dt)
 			local all_complete = true
@@ -141,8 +162,6 @@ parallel_mt = {
 			return max
 		end
 	},
-	__mul = common_multiplier,
-	__add = common_adder,
 	__div = function(self, action)
 		table.insert(self.actions, action)
 		return self
@@ -178,8 +197,8 @@ local empty_mt = {
 setmetatable(empty_action, empty_mt)
 
 -- loop
-local loop_number_mt = {
-	__index = {	
+local loop_number_mt = create_mt{
+	__index = {
 		step = function(self, dt)
 			for i=1, self.times do
 				while not self.action:update(dt) do
@@ -188,7 +207,6 @@ local loop_number_mt = {
 				self.action:reset()
 			end
 		end,
-		update = common_update,
 		reset = function(self)
 			self.update = nil
 			self.action:reset()
@@ -199,13 +217,10 @@ local loop_number_mt = {
 				return duration * self.times
 			end
 		end
-	},
-	__mul = common_multiplier,
-	__add = common_adder,
-	__div = common_divider
+	}
 }
 
-local loop_function_mt = {
+local loop_function_mt = create_mt{
 	__index = {
 		update = function(self, dt)
 			local state = self:condition()
@@ -222,18 +237,14 @@ local loop_function_mt = {
 			elseif state == 'once' then
 				become(self, self.action)
 				return self:update(dt)
-			else
-				error('Unknown state ' .. tostring(state))
+			else 
+				return self.action:update(dt)
 			end
 		end,
 		reset = function(self)
 			self.action:reset()
 		end,
-		estimated_duration = dummy_func,
-	},
-	__mul = common_multiplier,
-	__add = common_adder,
-	__div = common_divider
+	}
 }
 
 loop_create = function(action, times)
@@ -252,9 +263,9 @@ loop_create = function(action, times)
 		return setmetatable({action = action, condition = times}, loop_function_mt)
 	end
 end
-	
--- delay 
-local delay_mt = {
+
+-- delay
+local delay_mt = create_mt{
 	__index = {
 		step = function(self, dt)
 			local left = self.duration
@@ -262,10 +273,6 @@ local delay_mt = {
 				left = left - dt
 				dt = next_dt()
 			end
-		end,
-		update = common_update,
-		reset = function(self)
-			self.update = nil
 		end,
 		estimated_duration = function(self)
 			return self.duration
@@ -276,7 +283,7 @@ local delay_mt = {
 			self.duration = self.duration * times
 			return self
 		else
-			return common_multiplier(self, times)
+			return loop_create(self, times)
 		end
 	end,
 	__add = function(self, action)
@@ -284,7 +291,7 @@ local delay_mt = {
 			self.duration = self.duration + action.duration
 			return self
 		else
-			return common_adder(self, action)
+			return sequence_create{self, action}
 		end
 	end,
 	__div = function(self, action)
@@ -292,7 +299,7 @@ local delay_mt = {
 			self.duration = math.max(self.duration, action.duration)
 			return self
 		else
-			return common_divider(self, action)
+			return parallel_create{self, action}
 		end
 	end
 }
@@ -303,14 +310,14 @@ end
 
 -- tween
 
-local tween_mt = {
+local tween_mt = create_mt{
 	__index = {
 		step = function(self, dt)
 			local t = self.config
 			if t.from then
 				extend(t.subject, t.from)
 			end
-			
+
 			local target = t.to
 			if target == nil then
 				target = {}
@@ -324,17 +331,10 @@ local tween_mt = {
 				dt = next_dt(dt)
 			end
 		end,
-		update = common_update,
-		reset = function(self)
-			self.update = nil
-		end,
 		estimated_duration = function(self)
 			return self.config.duration or 1
 		end
-	},
-	__mul = common_multiplier,
-	__add = common_adder,
-	__div = common_divider
+	}
 }
 
 local function tween_create(config)
@@ -351,20 +351,16 @@ local function tween_group_create(t)
 end
 
 -- func
-local func_mt = {
+local func_mt = create_mt{
 	__index = {
 		step = function(self, dt)
 			self:func()
 		end,
-		update = common_update,
 		reset = dummy_func,
 		estimated_duration = function(self)
 			return 0
 		end
-	},
-	__mul = common_multiplier,
-	__add = common_adder,
-	__div = common_divider
+	}
 }
 
 local function func_create(func)
